@@ -1,4 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+
+import '../../Home_Screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,6 +15,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formkey = GlobalKey<FormState>();
   final TextEditingController emailTextController = TextEditingController();
   final TextEditingController passwordTextController = TextEditingController();
+  final _auth = FirebaseAuth.instance;
+  String? errorMessage;
 
   Widget emailTextField() {
     return TextFormField(
@@ -42,6 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextFormField(
       controller: passwordTextController,
       textInputAction: TextInputAction.done,
+      obscureText: true,
       decoration: InputDecoration(
         prefixIcon: Icon(Icons.vpn_key),
         contentPadding: EdgeInsets.fromLTRB(20, 15, 20, 15),
@@ -70,7 +77,9 @@ class _LoginScreenState extends State<LoginScreen> {
       color: Colors.blue,
       child: MaterialButton(
         minWidth: MediaQuery.of(context).size.width,
-        onPressed: () {},
+        onPressed: () {
+          signIn(emailTextController.text, passwordTextController.text);
+        },
         child: Text(
           'Login',
           style: TextStyle(
@@ -86,6 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Center(
         child: SingleChildScrollView(
           child: Container(
+            color: Colors.white,
             child: Padding(
               padding: const EdgeInsets.all(28.0),
               child: Form(
@@ -127,5 +137,25 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  void signIn(String email, String password) async {
+    if (_formkey.currentState!.validate()) {
+      try {
+        await _auth.signInWithEmailAndPassword(
+            email: email, password: password);
+        Fluttertoast.showToast(msg: 'Login Successfully');
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Home_Screen(),
+            ));
+      } on FirebaseAuthException catch (e) {
+        setState(() {
+          Fluttertoast.showToast(
+              msg: 'This email is not exist! please signUp first');
+        });
+      }
+    }
   }
 }
