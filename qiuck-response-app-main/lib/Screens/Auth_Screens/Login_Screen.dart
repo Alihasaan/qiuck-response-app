@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:quick_response_app/Screens/Auth_Screens/Registration_Screen.dart';
 
 import '../../Home_Screen.dart';
 
@@ -127,7 +128,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text("Don't hava an account?"),
-                          TextButton(onPressed: () {}, child: Text('signUp')),
+                          TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          RegistrationScreen(),
+                                    ));
+                              },
+                              child: Text('signUp')),
                         ],
                       )
                     ],
