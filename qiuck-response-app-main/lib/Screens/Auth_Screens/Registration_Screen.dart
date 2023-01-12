@@ -1,6 +1,12 @@
-// ignore_for_file: unnecessary_new
+// ignore_for_file: unnecessary_new, prefer_const_constructors
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:quick_response_app/Screens/Home_Screen.dart';
+import 'package:quick_response_app/Model/userModel.dart';
+import 'package:quick_response_app/Screens/NavbarAdd.dart';
 import 'package:quick_response_app/Screens/Auth_Screens/Login_Screen.dart';
 
 class RegistrationScreen extends StatefulWidget {
@@ -10,6 +16,8 @@ class RegistrationScreen extends StatefulWidget {
   State<RegistrationScreen> createState() => _RegistrationScreenState();
 }
 
+final _auth = FirebaseAuth.instance;
+final _formKey = GlobalKey<FormState>();
 TextEditingController firstNameController = TextEditingController();
 TextEditingController secondNameController = TextEditingController();
 TextEditingController emailController = TextEditingController();
@@ -153,7 +161,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       color: Colors.blue,
       child: MaterialButton(
         minWidth: MediaQuery.of(context).size.width,
-        onPressed: () {},
+        onPressed: () {
+          signUp(emailController.text, passwordController.text);
+        },
         child: Text(
           'SignUp',
           style: TextStyle(
@@ -189,44 +199,84 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             child: Padding(
               padding: const EdgeInsets.all(28.0),
               child: Form(
+                  key: _formKey,
                   child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    height: 20,
-                  ),
-                  SizedBox(
-                    height: 200,
-                    child: Image.asset('assets/img/qrs-logo.png'),
-                  ),
-                  firstTextField(),
-                  SizedBox(
-                    height: 20,
-                  ),
-                  secondTextField(),
-                  SizedBox(
-                    height: 20,
-                  ),
-                  emailTextField(),
-                  SizedBox(
-                    height: 20,
-                  ),
-                  passwordTextField(),
-                  SizedBox(
-                    height: 20,
-                  ),
-                  confirmPasswordTextField(),
-                  SizedBox(
-                    height: 20,
-                  ),
-                  signUpButton()
-                ],
-              )),
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        height: 20,
+                      ),
+                      SizedBox(
+                        height: 200,
+                        child: Image.asset('assets/img/qrs-logo.png'),
+                      ),
+                      firstTextField(),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      secondTextField(),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      emailTextField(),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      passwordTextField(),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      confirmPasswordTextField(),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      signUpButton()
+                    ],
+                  )),
             ),
           ),
         ),
       ),
     );
+  }
+
+  void postDetailsToFirestoreDatabase() async {
+//calling firestore
+//calling Usermodel
+//sending these values
+
+    FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+    User? user = _auth.currentUser;
+    UserModel userModel = UserModel();
+
+    userModel.email = user!.email;
+    userModel.uid = user.uid;
+    userModel.firstName = firstNameController.text;
+    userModel.secondName = secondNameController.text;
+    await firebaseFirestore
+        .collection('users')
+        .doc(user.uid)
+        .set(userModel.toMap());
+    Fluttertoast.showToast(msg: 'Account Created Successfully');
+    Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => Home_Screen()),
+        (route) => false);
+  }
+
+  void signUp(String email, String password) async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        await _auth
+            .createUserWithEmailAndPassword(email: email, password: password)
+            .then((value) => {
+                  postDetailsToFirestoreDatabase(),
+                  Fluttertoast.showToast(msg: 'Signup Successfully'),
+                });
+      } on FirebaseAuthException catch (e) {
+        Fluttertoast.showToast(msg: 'Error in SignUp');
+      }
+    }
   }
 }
